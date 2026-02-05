@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/Yandex-Practicum/go1fl-sprint6-final/internal/service"
 )
@@ -32,20 +33,41 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := r.ParseMultipartForm(10 << 20)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	contentType := r.Header.Get("Content-Type")
+	if strings.Contains(contentType, "multipart/form-data") {
+		err := r.ParseMultipartForm(10 << 20)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		file, _, err := r.FormFile("file")
+		if err != nil {
+			http.Error(w, "no such file", http.StatusInternalServerError)
+			return
+		}
+		defer file.Close()
+
+		data, err := io.ReadAll(file)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		result, err := service.AutoConvert(string(data))
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Write([]byte(fmt.Sprintf(`
+<!DOCTYPE html>
+<html><head><title>Result</title></head><body><h1>Result:</h1><pre>%s</pre><a href="/">← Back</a></body></html>`, result)))
 		return
 	}
 
-	file, _, err := r.FormFile("file")
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer file.Close()
-
-	data, err := io.ReadAll(file)
+	data, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -57,17 +79,6 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write([]byte(fmt.Sprintf(`
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Result</title>
-</head>
-<body>
-    <h1>Conversion Result:</h1>
-    <pre>%s</pre>
-    <a href="/">← Back</a>
-</body>
-</html>`, result)))
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Write([]byte(result))
 }

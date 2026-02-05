@@ -80,15 +80,13 @@ func morseToTextDecode(input string) (string, error) {
 		}
 		result.WriteByte(' ')
 	}
-
-	// Убираем последний пробел
 	return strings.TrimSpace(result.String()), nil
 }
 
 func textToMorseEncode(input string) string {
 	var result strings.Builder
 
-	for i, r := range input {
+	for _, r := range input {
 		if r == ' ' {
 			if result.Len() > 0 {
 				result.WriteString(" / ")

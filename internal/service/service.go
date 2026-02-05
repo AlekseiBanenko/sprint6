@@ -7,13 +7,39 @@ import (
 
 var (
 	morseToText = map[string]string{
-		".-": "А", "−...": "Б", "−..−.": "В", "−..": "Г", ".": "Д",
-		"..−.": "Е", "--.": "Ё", "....": "Ж", "..": "З", ".−−−": "И",
-		"−.−": "Й", "−.": "К", ".−..": "Л", "--": "М", "−.": "Н",
-		"−−−": "О", ".−−.": "П", "--−.": "Р", ".−.": "С", "−": "Т",
-		"..−": "У", "...−": "Ф", ".−−": "Х", "−..−": "Ц", "−.−−": "Ч",
-		"−−..": "Ш", "−−.−": "Щ", "−.−−−": "Ъ", "−−−−": "Ы", "−.−.": "Ь",
-		"−−−.": "Э", ".−..−": "Ю", "..−−.": "Я",
+		".-":    "А",
+		"−...":  "Б",
+		"−..−.": "В",
+		"−..":   "Г",
+		".":     "Д",
+		"..−.":  "Е",
+		"--.":   "Ё",
+		"....":  "Ж",
+		"..":    "З",
+		".−−−":  "И",
+		"−.−":   "Й",
+		"−.":    "К",
+		".−..":  "Л",
+		"--":    "М",
+		"−.":    "Н",
+		"−−−":   "О",
+		".−−.":  "П",
+		"--−.":  "Р",
+		".−.":   "С",
+		"−":     "Т",
+		"..−":   "У",
+		"...−":  "Ф",
+		".−−":   "Х",
+		"−..−":  "Ц",
+		"−.−−":  "Ч",
+		"−−..":  "Ш",
+		"−−.−":  "Щ",
+		"−.−−−": "Ъ",
+		"−−−−":  "Ы",
+		"−.−.":  "Ь",
+		"−−−.":  "Э",
+		".−..−": "Ю",
+		"..−−.": "Я",
 	}
 
 	textToMorse = map[rune]string{
@@ -33,8 +59,7 @@ func AutoConvert(input string) (string, error) {
 		return "", errors.New("input is empty")
 	}
 
-	// ✅ ФИКС: проверяем НАЛИЧИЕ ТОЧКИ-ТИРЕ
-	if strings.ContainsAny(trimmed, "−") || strings.ContainsAny(trimmed, ".−") {
+	if strings.ContainsAny(trimmed, "−") {
 		return morseToTextDecode(trimmed)
 	}
 	return textToMorseEncode(trimmed), nil
@@ -44,10 +69,7 @@ func morseToTextDecode(input string) (string, error) {
 	words := strings.Split(input, " / ")
 	var result strings.Builder
 
-	for i, word := range words {
-		if i > 0 {
-			result.WriteByte(' ')
-		}
+	for _, word := range words {
 		symbols := strings.Split(word, " ")
 		for _, symbol := range symbols {
 			if text, ok := morseToText[symbol]; ok {
@@ -56,25 +78,23 @@ func morseToTextDecode(input string) (string, error) {
 				return "", errors.New("invalid morse code")
 			}
 		}
+		result.WriteByte(' ')
 	}
-	return result.String(), nil
+
+	// Убираем последний пробел
+	return strings.TrimSpace(result.String()), nil
 }
 
 func textToMorseEncode(input string) string {
 	var result strings.Builder
-	prevSpace := false
 
 	for i, r := range input {
 		if r == ' ' {
-			if !prevSpace {
-				if result.Len() > 0 {
-					result.WriteString(" / ")
-				}
-				prevSpace = true
+			if result.Len() > 0 {
+				result.WriteString(" / ")
 			}
 			continue
 		}
-		prevSpace = false
 
 		if morse, ok := textToMorse[r]; ok {
 			if result.Len() > 0 {

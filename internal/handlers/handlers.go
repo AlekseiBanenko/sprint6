@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"internal/service"
+	"service"
 )
 
 func Index(w http.ResponseWriter, r *http.Request) {

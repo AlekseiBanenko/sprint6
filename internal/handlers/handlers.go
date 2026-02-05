@@ -12,7 +12,21 @@ import (
 )
 
 func Index(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "index.html")
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Write([]byte(`
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Morse Code Converter</title>
+</head>
+<body>
+    <h1>Morse Code Converter</h1>
+    <form action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="file" accept=".txt" required>
+        <button type="submit">Convert</button>
+    </form>
+</body>
+</html>`))
 }
 
 func Upload(w http.ResponseWriter, r *http.Request) {

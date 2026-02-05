@@ -4,11 +4,11 @@ import (
 	"log"
 	"os"
 
-	"sprint6/internal/server" // ← УБРАЛ лишний sprint6/
+	"server"
 )
 
 func main() {
-	logger := log.New(os.Stdout, "morse: ", log.LstdFlags)
+	logger := log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime)
 	srv := server.New(logger)
-	logger.Fatal(srv.Start())
+	logger.Fatal("Server failed: ", srv.Start())
 }

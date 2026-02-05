@@ -5,42 +5,57 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
-	"sprint6/internal/service"
+	"internal/service"
 )
 
 func Index(w http.ResponseWriter, r *http.Request) {
-	html := `<!DOCTYPE html>
-<html><head><title>Morse</title></head><body>
-<h1>Morse Converter</h1><form action="/upload" method="post" enctype="multipart/form-data">
-<input type="file" name="file" accept=".txt" required><button>Convert</button></form></body></html>`
-	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(html))
+	http.ServeFile(w, r, "index.html")
 }
 
 func Upload(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "", http.StatusMethodNotAllowed)
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	err := r.ParseMultipartForm(10 << 20)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	file, _, err := r.FormFile("file")
 	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer file.Close()
 
-	data, _ := io.ReadAll(file)
-	result, err := service.AutoConvert(string(data))
+	data, err := io.ReadAll(file)
 	if err != nil {
-		http.Error(w, "", http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	fname := fmt.Sprintf("result_%s.txt", time.Now().UTC().Format("20060102_150405"))
-	os.WriteFile(fname, []byte(result), 0644)
+	result, err := service.AutoConvert(string(data))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-	w.Header().Set("Content-Type", "text/plain")
-	w.Write([]byte(result))
+	filename := fmt.Sprintf("%s%s", time.Now().UTC().String(), filepath.Ext("test"))
+	f, err := os.Create(filename)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer f.Close()
+
+	f.WriteString(result)
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	fmt.Fprint(w, result)
 }

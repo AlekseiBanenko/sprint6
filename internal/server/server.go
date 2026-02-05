@@ -5,9 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"sprint6/internal/handlers"
-
-	"github.com/go-chi/chi/v5"
+	"internal/handlers"
 )
 
 type Server struct {
@@ -15,21 +13,24 @@ type Server struct {
 	server *http.Server
 }
 
-func New(logger *log.Logger) *Server {
-	r := chi.NewRouter()
-	r.Get("/", handlers.Index)
-	r.Post("/upload", handlers.Upload)
+func New(l *log.Logger) *Server {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", handlers.Index)
+	mux.HandleFunc("/upload", handlers.Upload)
 
 	srv := &http.Server{
 		Addr:         ":8080",
-		Handler:      r,
+		Handler:      mux,
+		ErrorLog:     l,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  15 * time.Second,
-		ErrorLog:     logger,
 	}
 
-	return &Server{logger: logger, server: srv}
+	return &Server{
+		logger: l,
+		server: srv,
+	}
 }
 
 func (s *Server) Start() error {

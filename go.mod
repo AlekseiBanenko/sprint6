@@ -1,6 +1,6 @@
 module github.com/Yandex-Practicum/go1fl-sprint6-final
 
-go 1.25.5
+go 1.24
 
 replace github.com/Yandex-Practicum/go1fl-sprint6-final/internal/server => ./internal/server
 

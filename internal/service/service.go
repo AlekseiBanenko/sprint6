@@ -7,25 +7,23 @@ import (
 
 var (
 	morseToText = map[string]string{
-		".-": "A", "-...": "B", "-.-.": "C", "-..": "D", ".": "E",
-		"..-.": "F", "--.": "G", "....": "H", "..": "I", ".---": "J",
-		"-.-": "K", ".-..": "L", "--": "M", "-.": "N", "---": "O",
-		".--.": "P", "--.-": "Q", ".-.": "R", "...": "S", "-": "T",
-		"..-": "U", "...-": "V", ".--": "W", "-..-": "X", "-.--": "Y",
-		"--..": "Z", ".----": "1", "..---": "2", "...--": "3", "....-": "4",
-		".....": "5", "-....": "6", "--...": "7", "---..": "8", "----.": "9",
-		"-----": "0",
+		".-": "А", "−...": "Б", "−..−.": "В", "−..": "Г", ".": "Д",
+		"..−.": "Е", "--.": "Ё", "....": "Ж", "..": "З", ".−−−": "И",
+		"−.−": "Й", "−.": "К", ".−..": "Л", "--": "М", "−.": "Н",
+		"−−−": "О", ".−−.": "П", "--−.": "Р", ".−.": "С", "−": "Т",
+		"..−": "У", "...−": "Ф", ".−−": "Х", "−..−": "Ц", "−.−−": "Ч",
+		"−−..": "Ш", "−−.−": "Щ", "−.−−−": "Ъ", "−−−−": "Ы", "−.−.": "Ь",
+		"−−−.": "Э", ".−..−": "Ю", "..−−.": "Я",
 	}
 
 	textToMorse = map[rune]string{
-		'A': ".-", 'B': "-...", 'C': "-.-.", 'D': "-..", 'E': ".",
-		'F': "..-.", 'G': "--.", 'H': "....", 'I': "..", 'J': ".---",
-		'K': "-.-", 'L': ".-..", 'M': "--", 'N': "-.", 'O': "---",
-		'P': ".--.", 'Q': "--.-", 'R': ".-.", 'S': "...", 'T': "-",
-		'U': "..-", 'V': "...-", 'W': ".--", 'X': "-..-", 'Y': "-.--",
-		'Z': "--..", '1': ".----", '2': "..---", '3': "...--", '4': "....-",
-		'5': ".....", '6': "-....", '7': "--...", '8': "---..", '9': "----.",
-		'0': "-----", ' ': "/",
+		'А': ".-", 'Б': "−...", 'В': "−..−.", 'Г': "−..", 'Д': ".",
+		'Е': "..−.", 'Ё': "--.", 'Ж': "....", 'З': "..", 'И': ".−−−",
+		'Й': "−.−", 'К': "−.", 'Л': ".−..", 'М': "--", 'Н': "−.",
+		'О': "−−−", 'П': ".−−.", 'Р': "--−.", 'С': ".−.", 'Т': "−",
+		'У': "..−", 'Ф': "...−", 'Х': ".−−", 'Ц': "−..−", 'Ч': "−.−−",
+		'Ш': "−−..", 'Щ': "−−.−", 'Ъ': "−.−−−", 'Ы': "−−−−", 'Ь': "−.−.",
+		'Э': "−−−.", 'Ю': ".−..−", 'Я': "..−−.", ' ': "/",
 	}
 )
 
@@ -35,13 +33,10 @@ func AutoConvert(input string) (string, error) {
 		return "", errors.New("input is empty")
 	}
 
-	if strings.ContainsAny(trimmed, ".-") {
-		result, err := morseToTextDecode(trimmed)
-		if err == nil {
-			return result, nil
-		}
+	// ✅ ФИКС: проверяем НАЛИЧИЕ ТОЧКИ-ТИРЕ
+	if strings.ContainsAny(trimmed, "−") || strings.ContainsAny(trimmed, ".−") {
+		return morseToTextDecode(trimmed)
 	}
-
 	return textToMorseEncode(trimmed), nil
 }
 
@@ -56,7 +51,7 @@ func morseToTextDecode(input string) (string, error) {
 		symbols := strings.Split(word, " ")
 		for _, symbol := range symbols {
 			if text, ok := morseToText[symbol]; ok {
-				result.WriteByte(text[0])
+				result.WriteString(text)
 			} else {
 				return "", errors.New("invalid morse code")
 			}
@@ -67,13 +62,22 @@ func morseToTextDecode(input string) (string, error) {
 
 func textToMorseEncode(input string) string {
 	var result strings.Builder
+	prevSpace := false
+
 	for i, r := range input {
-		if i > 0 && r == ' ' {
-			result.WriteString(" / ")
+		if r == ' ' {
+			if !prevSpace {
+				if result.Len() > 0 {
+					result.WriteString(" / ")
+				}
+				prevSpace = true
+			}
 			continue
 		}
+		prevSpace = false
+
 		if morse, ok := textToMorse[r]; ok {
-			if i > 0 {
+			if result.Len() > 0 {
 				result.WriteByte(' ')
 			}
 			result.WriteString(morse)

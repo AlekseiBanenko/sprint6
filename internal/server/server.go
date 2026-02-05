@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"handlers"
+	"github.com/Yandex-Practicum/go1fl-sprint6-final/internal/handlers"
 )
 
 type Server struct {

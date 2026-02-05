@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"service"
+	"github.com/Yandex-Practicum/go1fl-sprint6-final/internal/service"
 )
 
 func Index(w http.ResponseWriter, r *http.Request) {

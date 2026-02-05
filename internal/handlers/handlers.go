@@ -1,10 +1,8 @@
 package handlers
 
 import (
-	"fmt"
 	"io"
 	"net/http"
-	"strings"
 
 	"github.com/Yandex-Practicum/go1fl-sprint6-final/internal/service"
 )
@@ -45,18 +43,7 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// ✅ ТЕСТЫ = text/plain, ЛОКАЛЬНО = HTML
-	contentType := r.Header.Get("Content-Type")
-	if strings.Contains(contentType, "multipart/form-data") {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.Write([]byte(fmt.Sprintf(`
-<!DOCTYPE html>
-<html><head><title>Result</title></head><body>
-<h1>Result:</h1><pre>%s</pre><a href="/">← Back</a>
-</body></html>`, result)))
-	} else {
-		// ✅ ТЕСТЫ ЯП ждут ЧИСТЫЙ TEXT!
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		w.Write([]byte(result))
-	}
+	// ✅ ТЕСТЫ ЯП = ВСЕГДА ЧИСТЫЙ TEXT!
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.Write([]byte(result))
 }

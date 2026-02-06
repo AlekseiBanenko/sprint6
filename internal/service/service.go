@@ -1,6 +1,7 @@
 package service
 
 import (
+	"command-line-arguments/Users/a1/cod/sprint6/sprint6/pkg/morse/morse.go"
 	"errors"
 	"fmt"
 	"strings"
@@ -44,6 +45,10 @@ var (
 		"---..": "8",
 		"----.": "9",
 		"-----": "0",
+		".--.":  "П", "--.": "Г", ".-.": "Р", "..": "И", ".--": "В", ".": "Е",
+		"-": "Т", "----": "Ш", "-..": "Д", "..-.": "..-.", "-.--": "Ы",
+		"-.-": "К", "-.-.-": "Ц", "---.": "Ч", ".-..": "Л", "-.": "Н",
+		"-...": "Б", "..-": "У", "--": "М",
 	}
 
 	textToMorse = map[rune]string{
@@ -90,13 +95,15 @@ func AutoConvert(input string) (string, error) {
 		return "", errors.New("input is empty")
 	}
 
-	// Если содержит последовательности точек-тире разделённые пробелами = Morse
-	if strings.ContainsAny(trimmed, ". -") {
-		return morseToTextDecode(trimmed)
+	// Детекция Морзе: содержит точки/тире + разделители
+	if strings.ContainsAny(trimmed, ".-") &&
+		(strings.Contains(trimmed, " ") || strings.Contains(trimmed, "/")) {
+		// Морзе → Текст
+		return morse.ToText(trimmed), nil
 	}
 
-	// Текст → Morse
-	return textToMorseEncode(trimmed), nil
+	// Текст → Морзе
+	return morse.ToMorse(trimmed), nil
 }
 
 func morseToTextDecode(input string) (string, error) {

@@ -2,8 +2,9 @@ package service
 
 import (
 	"errors"
-	"pkg/morse" // ← ЛОКАЛЬНЫЙ ПАКЕТ!
 	"strings"
+
+	"github.com/AlekseiBanenko/sprint6/pkg/morse"
 )
 
 func AutoConvert(input string) (string, error) {

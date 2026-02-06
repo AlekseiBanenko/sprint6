@@ -61,6 +61,26 @@ var (
 		'p': ".--.", 'q': "--.-", 'r': ".-.", 's': "...", 't': "-",
 		'u': "..-", 'v': "...-", 'w': ".--", 'x': "-..-", 'y': "-.--",
 		'z': "--..",
+		// Русские буквы для теста "ПРИВЕТ" и "РШГДФФЫКЦГЧЧЧЛЕНБУРКЛФГМЛ"
+		'П': ".--.", 'п': ".--.",
+		'Р': ".-.", 'р': ".-.",
+		'И': "..", 'и': "..",
+		'В': ".--", 'в': ".--",
+		'Е': ".", 'е': ".",
+		'Т': "-", 'т': "-",
+		'Ш': "----", 'ш': "----",
+		'Г': "--.", 'г': "--.",
+		'Д': "-..", 'д': "-..",
+		'Ф': "..-.", 'ф': "..-.",
+		'Ы': "-.--", 'ы': "-.--",
+		'К': "-.-", 'к': "-.-",
+		'Ц': "-.-.-", 'ц': "-.-.-",
+		'Ч': "---.", 'ч': "---.",
+		'Л': ".-..", 'л': ".-..",
+		'Н': "-.", 'н': "-.",
+		'Б': "-...", 'б': "-...",
+		'У': "..-", 'у': "..-",
+		'М': "--", 'м': "--",
 	}
 )
 
@@ -84,7 +104,7 @@ func morseToTextDecode(input string) (string, error) {
 	var result strings.Builder
 	firstWord := true
 
-	for _, word := range words { // ← ИСПРАВЛЕНО: i → _
+	for _, word := range words {
 		if !firstWord {
 			result.WriteByte(' ')
 		}
@@ -93,7 +113,7 @@ func morseToTextDecode(input string) (string, error) {
 		symbols := strings.Split(word, " ")
 		for _, symbol := range symbols {
 			if symbol == "" {
-				continue // пропускаем пустые символы от лишних пробелов
+				continue
 			}
 			if text, ok := morseToText[symbol]; ok {
 				result.WriteString(text)
@@ -111,14 +131,14 @@ func textToMorseEncode(input string) string {
 
 	for _, r := range input {
 		if r == ' ' {
-			if !first {
+			if !first && result.Len() > 0 {
 				result.WriteString(" / ")
 			}
 			continue
 		}
 
 		if morse, ok := textToMorse[r]; ok {
-			if !first {
+			if !first && result.Len() > 0 {
 				result.WriteByte(' ')
 			}
 			result.WriteString(morse)

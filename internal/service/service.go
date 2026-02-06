@@ -2,6 +2,7 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -81,18 +82,24 @@ func AutoConvert(input string) (string, error) {
 func morseToTextDecode(input string) (string, error) {
 	words := strings.Split(input, " / ")
 	var result strings.Builder
+	firstWord := true
 
-	for _, word := range words { // Fixed: _ instead of i
+	for _, word := range words { // ← ИСПРАВЛЕНО: i → _
+		if !firstWord {
+			result.WriteByte(' ')
+		}
+		firstWord = false
+
 		symbols := strings.Split(word, " ")
 		for _, symbol := range symbols {
+			if symbol == "" {
+				continue // пропускаем пустые символы от лишних пробелов
+			}
 			if text, ok := morseToText[symbol]; ok {
 				result.WriteString(text)
 			} else {
-				return "", errors.New("invalid morse code")
+				return "", fmt.Errorf("invalid morse code: %q", symbol)
 			}
-		}
-		if len(words) > 1 && result.Len() > 0 {
-			result.WriteByte(' ')
 		}
 	}
 	return strings.TrimSpace(result.String()), nil
@@ -100,20 +107,22 @@ func morseToTextDecode(input string) (string, error) {
 
 func textToMorseEncode(input string) string {
 	var result strings.Builder
+	first := true
 
-	for i, r := range input {
+	for _, r := range input {
 		if r == ' ' {
-			if result.Len() > 0 {
+			if !first {
 				result.WriteString(" / ")
 			}
 			continue
 		}
 
 		if morse, ok := textToMorse[r]; ok {
-			if result.Len() > 0 {
+			if !first {
 				result.WriteByte(' ')
 			}
 			result.WriteString(morse)
+			first = false
 		}
 	}
 	return result.String()

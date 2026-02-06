@@ -59,12 +59,9 @@ func AutoConvert(input string) (string, error) {
 		return "", errors.New("input is empty")
 	}
 
-	// Если содержит точки и тире — Morse → текст
 	if strings.ContainsAny(trimmed, ".-") {
 		return morseToTextDecode(trimmed)
 	}
-
-	// Текст → Morse
 	return textToMorseEncode(trimmed), nil
 }
 
@@ -72,10 +69,7 @@ func morseToTextDecode(input string) (string, error) {
 	words := strings.Split(input, " / ")
 	var result strings.Builder
 
-	for i, word := range words {
-		if i > 0 {
-			result.WriteByte(' ')
-		}
+	for _, word := range words {
 		symbols := strings.Split(word, " ")
 		for _, symbol := range symbols {
 			if text, ok := morseToText[symbol]; ok {
@@ -84,6 +78,7 @@ func morseToTextDecode(input string) (string, error) {
 				return "", errors.New("invalid morse code")
 			}
 		}
+		result.WriteByte(' ')
 	}
 	return strings.TrimSpace(result.String()), nil
 }
@@ -91,7 +86,7 @@ func morseToTextDecode(input string) (string, error) {
 func textToMorseEncode(input string) string {
 	var result strings.Builder
 
-	for i, r := range input {
+	for _, r := range input {
 		if r == ' ' {
 			if result.Len() > 0 {
 				result.WriteString(" / ")

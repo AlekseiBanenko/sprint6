@@ -2,9 +2,8 @@ package service
 
 import (
 	"errors"
+	"pkg/morse" // Локальный пакет из шаблона
 	"strings"
-
-	"pkg/morse"
 )
 
 func AutoConvert(input string) (string, error) {
@@ -13,12 +12,11 @@ func AutoConvert(input string) (string, error) {
 		return "", errors.New("input is empty")
 	}
 
-	// Морзе содержит . - и разделители
-	if strings.Contains(trimmed, ".") &&
-		strings.Contains(trimmed, "-") &&
-		(strings.Contains(trimmed, " ") || strings.Contains(trimmed, "/")) {
+	// Если содержит . - и разделители = Морзе
+	if strings.ContainsAny(trimmed, ".-") {
 		return morse.ToText(trimmed), nil
 	}
 
+	// Текст → Морзе
 	return morse.ToMorse(trimmed), nil
 }

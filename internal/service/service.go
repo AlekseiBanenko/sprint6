@@ -82,7 +82,7 @@ func morseToTextDecode(input string) (string, error) {
 	words := strings.Split(input, " / ")
 	var result strings.Builder
 
-	for _, word := range words {
+	for _, word := range words { // Fixed: _ instead of i
 		symbols := strings.Split(word, " ")
 		for _, symbol := range symbols {
 			if text, ok := morseToText[symbol]; ok {
@@ -91,7 +91,7 @@ func morseToTextDecode(input string) (string, error) {
 				return "", errors.New("invalid morse code")
 			}
 		}
-		if len(words) > 1 {
+		if len(words) > 1 && result.Len() > 0 {
 			result.WriteByte(' ')
 		}
 	}

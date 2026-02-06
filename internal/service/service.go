@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/AlekseiBanenko/sprint6/pkg/morse"
+	"pkg/morse"
 )
 
 func AutoConvert(input string) (string, error) {

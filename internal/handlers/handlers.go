@@ -22,46 +22,44 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// ✅ ВАРИАНТ 1: Сначала парсим форму, потом ищем файл
-	if err := r.ParseMultipartForm(10 << 20); err != nil {
-		http.Error(w, fmt.Sprintf("parse form error: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	f, fh, err := r.FormFile("file")
+	// Парсим форму, чтобы получить файл
+	err := r.ParseMultipartForm(10 << 20) // 10 МБ
 	if err != nil {
-		http.Error(w, fmt.Sprintf("no file: %v", err), http.StatusBadRequest)
+		http.Error(w, "Error parsing form: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	defer f.Close()
 
-	// Читаем файл
-	data, err := io.ReadAll(f)
+	file, _, err := r.FormFile("file")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "No file: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+	defer file.Close()
+
+	data, err := io.ReadAll(file)
+	if err != nil {
+		http.Error(w, "Failed to read file: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Конвертируем
 	result, err := service.AutoConvert(string(data))
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Conversion error: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Создаём локальный файл
-	ext := filepath.Ext(fh.Filename)
-	filename := fmt.Sprintf("%s%s", time.Now().UTC().String(), ext)
-	outFile, err := os.Create(filename)
+	// Создаем уникальное имя файла для сохранения результата
+	filename := fmt.Sprintf("result_%s.txt", time.Now().UTC().Format("20060102_150405"))
+	path := filepath.Join(".", filename)
+
+	err = os.WriteFile(path, []byte(result), 0644)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Failed to save result: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
-	defer outFile.Close()
-
-	outFile.WriteString(result)
 
 	// Возвращаем результат
+	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Write([]byte(result))
 }

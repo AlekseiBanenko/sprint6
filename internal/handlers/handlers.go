@@ -22,7 +22,7 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Парсим форму, чтобы получить файл
+	// Парсим multipart форму
 	err := r.ParseMultipartForm(10 << 20) // 10 МБ
 	if err != nil {
 		http.Error(w, "Error parsing form: "+err.Error(), http.StatusInternalServerError)
@@ -48,7 +48,7 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Создаем уникальное имя файла для сохранения результата
+	// Создайте уникальное имя файла для сохранения результата
 	filename := fmt.Sprintf("result_%s.txt", time.Now().UTC().Format("20060102_150405"))
 	path := filepath.Join(".", filename)
 
@@ -58,7 +58,7 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Возвращаем результат
+	// Устанавливаем статус OK и возвращаем результат
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Write([]byte(result))

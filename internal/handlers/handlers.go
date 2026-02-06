@@ -13,7 +13,7 @@ import (
 
 func Index(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	http.ServeFile(w, r, "index.html") // ✅ Файл с диска!
+	http.ServeFile(w, r, "index.html")
 }
 
 func Upload(w http.ResponseWriter, r *http.Request) {
@@ -22,36 +22,34 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 1. ✅ ПАРСИМ MULTIPART ФОРМУ
-	err := r.ParseMultipartForm(10 << 20) // 10MB
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	// ✅ ВАРИАНТ 1: Сначала парсим форму, потом ищем файл
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		http.Error(w, fmt.Sprintf("parse form error: %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	// 2. ✅ ПОЛУЧАЕМ ФАЙЛ "file"
 	f, fh, err := r.FormFile("file")
 	if err != nil {
-		http.Error(w, "no file in form", http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("no file: %v", err), http.StatusBadRequest)
 		return
 	}
 	defer f.Close()
 
-	// 3. ✅ ЧИТАЕМ СОДЕРЖИМОЕ
+	// Читаем файл
 	data, err := io.ReadAll(f)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// 4. ✅ КОНВЕРТИРУЕМ
+	// Конвертируем
 	result, err := service.AutoConvert(string(data))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// 5. ✅ СОЗДАЁМ ЛОКАЛЬНЫЙ ФАЙЛ
+	// Создаём локальный файл
 	ext := filepath.Ext(fh.Filename)
 	filename := fmt.Sprintf("%s%s", time.Now().UTC().String(), ext)
 	outFile, err := os.Create(filename)
@@ -61,13 +59,9 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 	}
 	defer outFile.Close()
 
-	// 6. ✅ ЗАПИСЫВАЕМ РЕЗУЛЬТАТ
-	if _, err := outFile.WriteString(result); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	outFile.WriteString(result)
 
-	// 7. ✅ ОТДАЁМ КЛИЕНТУ
+	// Возвращаем результат
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Write([]byte(result))
 }

@@ -99,16 +99,20 @@ func AutoConvert(input string) (string, error) {
 }
 
 func decodeMorse(code string) (string, error) {
-	fmt.Println("Decoding Morse:", code) // Для отладки
+	fmt.Println("Decoding Morse:", code) // для отладки
 
-	// Разделяем по пробелам
-	parts := strings.Fields(code) // автоубирает лишние пробелы
+	// Разделяем по пробелам, оставляя все пробелы, чтобы сохранить разделение
+	parts := strings.Split(code, " ")
 	var decoded strings.Builder
 
 	for _, c := range parts {
 		if c == "/" {
 			// разделение слов
 			decoded.WriteString(" ")
+			continue
+		}
+		if c == "" {
+			// пропускаем лишние пробелы
 			continue
 		}
 		if letter, ok := morseToText[c]; ok {

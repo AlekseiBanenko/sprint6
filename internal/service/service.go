@@ -29,7 +29,7 @@ var morseToText = map[string]string{
 	"...":    "С",
 	"-":      "Т",
 	"..-":    "У",
-	"..-..":  "Ь",
+	"..--":   "Ь",
 	".--.-":  "Э",
 	"---.":   "Ю",
 	"--.-":   "Щ",
@@ -98,25 +98,22 @@ func AutoConvert(input string) (string, error) {
 	return encodeMorse(trimmed), nil
 }
 
-func decodeMorse(input string) (string, error) {
-	// Разделяем по пробелам для символов, по " / " или "/" для слов
-	words := strings.Split(input, " / ")
-	var result strings.Builder
+func decodeMorse(code string) (string, error) {
+	codes := strings.Split(code, " ") // разделение по пробелам
+	var decoded strings.Builder
 
-	for i, word := range words {
-		if i > 0 {
-			result.WriteByte(' ')
+	for _, c := range codes {
+		if c == "" {
+			// пропускаем лишние пробелы
+			continue
 		}
-		symbols := strings.Fields(word)
-		for _, symbol := range symbols {
-			if text, ok := morseToText[symbol]; ok {
-				result.WriteString(text)
-			} else {
-				return "", fmt.Errorf("invalid morse code: %q", symbol)
-			}
+		if letter, ok := morseToText[c]; ok {
+			decoded.WriteString(letter)
+		} else {
+			return "", fmt.Errorf("invalid morse code: %s", c)
 		}
 	}
-	return result.String(), nil
+	return decoded.String(), nil
 }
 
 func encodeMorse(input string) string {

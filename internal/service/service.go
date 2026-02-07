@@ -25,14 +25,12 @@ var morseToText = map[string]string{
 	"---":    "О",
 	".--.":   "П",
 	".-.-":   "Я",
-	".-.-":   "Я",
 	"-.-.":   "Р",
 	"...":    "С",
 	"-":      "Т",
 	"..-":    "У",
 	"..-.":   "Ф",
 	"....":   "Х",
-	"-.-.":   "Ц",
 	"---.":   "Ч",
 	"----":   "Ш",
 	"--.-":   "Щ",
@@ -41,6 +39,7 @@ var morseToText = map[string]string{
 	"..-..":  "Ь",
 	".--.-":  "Э",
 	"---.":   "Ю",
+	".-.-":   "Я",
 	"/":      " ",
 }
 
@@ -91,7 +90,7 @@ func AutoConvert(input string) (string, error) {
 	morseChars := ".- /"
 	isMorse := true
 	for _, r := range trimmed {
-		if !strings.ContainsRune(morseChars, r) && r != ' ' {
+		if !strings.ContainsRune(morseChars, r) {
 			isMorse = false
 			break
 		}
@@ -104,6 +103,8 @@ func AutoConvert(input string) (string, error) {
 }
 
 func decodeMorse(input string) (string, error) {
+	// Разделяем по пробелам, чтобы получить символы
+	// Для слов используем " / " или "/"
 	words := strings.Split(input, " / ")
 	var result strings.Builder
 
@@ -111,7 +112,8 @@ func decodeMorse(input string) (string, error) {
 		if i > 0 {
 			result.WriteByte(' ')
 		}
-		for _, symbol := range strings.Fields(word) {
+		symbols := strings.Fields(word)
+		for _, symbol := range symbols {
 			if text, ok := morseToText[symbol]; ok {
 				result.WriteString(text)
 			} else {

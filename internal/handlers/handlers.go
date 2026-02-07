@@ -23,27 +23,27 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// ✅ ПРОВЕРЯЕМ multipart
+	// Проверка типа контента
 	contentType := r.Header.Get("Content-Type")
 	if !strings.HasPrefix(contentType, "multipart/form-data") {
 		http.Error(w, "multipart/form-data required", http.StatusBadRequest)
 		return
 	}
 
-	// ✅ Парсим форму
+	// Парсинг формы
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		http.Error(w, fmt.Sprintf("parse error: %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	// ✅ Ищем файл в FormFile
+	// Получение файла из формы
 	f, fh, err := r.FormFile("myFile")
 	if err != nil {
-		// DEBUG: показываем что есть в форме
+		// Для отладки можно вывести все поля формы
 		for name := range r.MultipartForm.File {
 			fmt.Printf("Found file field: %s\n", name)
 		}
-		http.Error(w, fmt.Sprintf("no file 'file': %v", err), http.StatusBadRequest)
+		http.Error(w, fmt.Sprintf("file 'myFile' not found: %v", err), http.StatusBadRequest)
 		return
 	}
 	defer f.Close()
@@ -60,17 +60,24 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Создаём файл
+	// Генерация безопасного имени файла
 	ext := filepath.Ext(fh.Filename)
-	filename := fmt.Sprintf("%s%s", time.Now().UTC().String(), ext)
+	filename := fmt.Sprintf("%d%s", time.Now().UnixNano(), ext)
+
 	outFile, err := os.Create(filename)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer outFile.Close()
-	outFile.WriteString(result)
 
+	// Запись результата в файл
+	if _, err := outFile.WriteString(result); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Отправка результата клиенту
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Write([]byte(result))
 }

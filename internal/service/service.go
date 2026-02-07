@@ -111,6 +111,11 @@ func decodeMorse(code string) (string, error) {
 		if c == "" {
 			continue
 		}
+		if c == "/" {
+			// разделитель слов
+			decoded.WriteString(" ")
+			continue
+		}
 		if letter, ok := morseToText[c]; ok {
 			decoded.WriteString(letter)
 		} else {
@@ -123,22 +128,18 @@ func decodeMorse(code string) (string, error) {
 
 func encodeMorse(input string) string {
 	var result strings.Builder
-	inWord := false
 
 	for _, r := range input {
 		if r == ' ' {
-			if inWord {
-				result.WriteString(" / ")
-				inWord = false
-			}
+			// разделитель слов
+			result.WriteString(" / ")
 			continue
 		}
 		if morse, ok := textToMorse[r]; ok {
-			if inWord {
+			if result.Len() > 0 && result.String()[result.Len()-1] != ' ' {
 				result.WriteByte(' ')
 			}
 			result.WriteString(morse)
-			inWord = true
 		}
 	}
 	return result.String()

@@ -37,7 +37,7 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// ✅ Ищем файл в FormFile
-	f, fh, err := r.FormFile("file")
+	f, fh, err := r.FormFile("myFile")
 	if err != nil {
 		// DEBUG: показываем что есть в форме
 		for name := range r.MultipartForm.File {

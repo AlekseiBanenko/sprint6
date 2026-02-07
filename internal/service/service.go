@@ -101,7 +101,6 @@ func AutoConvert(input string) (string, error) {
 func decodeMorse(code string) (string, error) {
 	fmt.Println("Decoding Morse:", code) // для отладки
 
-	// Разделяем по пробелам, оставляя все пробелы, чтобы сохранить разделение
 	parts := strings.Split(code, " ")
 	var decoded strings.Builder
 
@@ -118,6 +117,8 @@ func decodeMorse(code string) (string, error) {
 		if letter, ok := morseToText[c]; ok {
 			decoded.WriteString(letter)
 		} else {
+			// логируем проблему, чтобы понять, что не нашли код
+			fmt.Printf("Код не найден: %s\n", c)
 			return "", fmt.Errorf("invalid morse code: %s", c)
 		}
 	}

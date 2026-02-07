@@ -100,14 +100,12 @@ func AutoConvert(input string) (string, error) {
 
 func decodeMorse(code string) (string, error) {
 	fmt.Println("Decoding Morse:", code) // Для отладки
-	// Разделяем по пробелам, а затем обрабатываем "/" как разделитель слов
-	parts := strings.Split(code, " ")
+
+	// Разделяем по пробелам
+	parts := strings.Fields(code) // автоубирает лишние пробелы
 	var decoded strings.Builder
 
 	for _, c := range parts {
-		if c == "" {
-			continue
-		}
 		if c == "/" {
 			// разделение слов
 			decoded.WriteString(" ")

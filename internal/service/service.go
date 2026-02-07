@@ -88,12 +88,19 @@ func AutoConvert(input string) (string, error) {
 		return "", errors.New("input is empty")
 	}
 
-	// Морзе: содержит .- и разделители
-	if strings.ContainsAny(trimmed, ".-") &&
-		(strings.Contains(trimmed, " ") || strings.Contains(trimmed, "/")) {
-		return decodeMorse(trimmed)
+	// Проверка, содержит ли вход только допустимые символы для Морзе
+	morseChars := ".- /"
+	isMorse := true
+	for _, r := range trimmed {
+		if !strings.ContainsRune(morseChars, r) && r != ' ' {
+			isMorse = false
+			break
+		}
 	}
 
+	if isMorse {
+		return decodeMorse(trimmed)
+	}
 	return encodeMorse(trimmed), nil
 }
 

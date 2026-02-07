@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/Yandex-Practicum/go1fl-sprint6-final/internal/service"
@@ -18,38 +19,48 @@ func Index(w http.ResponseWriter, r *http.Request) {
 
 func Upload(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		http.Error(w, "Only POST allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// ✅ ВАРИАНТ 1: Сначала парсим форму, потом ищем файл
+	// ✅ ПРОВЕРЯЕМ multipart
+	contentType := r.Header.Get("Content-Type")
+	if !strings.HasPrefix(contentType, "multipart/form-data") {
+		http.Error(w, "multipart/form-data required", http.StatusBadRequest)
+		return
+	}
+
+	// ✅ Парсим форму
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
-		http.Error(w, fmt.Sprintf("parse form error: %v", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("parse error: %v", err), http.StatusInternalServerError)
 		return
 	}
 
+	// ✅ Ищем файл в FormFile
 	f, fh, err := r.FormFile("file")
 	if err != nil {
-		http.Error(w, fmt.Sprintf("no file: %v", err), http.StatusBadRequest)
+		// DEBUG: показываем что есть в форме
+		for name := range r.MultipartForm.File {
+			fmt.Printf("Found file field: %s\n", name)
+		}
+		http.Error(w, fmt.Sprintf("no file 'file': %v", err), http.StatusBadRequest)
 		return
 	}
 	defer f.Close()
 
-	// Читаем файл
 	data, err := io.ReadAll(f)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Конвертируем
 	result, err := service.AutoConvert(string(data))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Создаём локальный файл
+	// Создаём файл
 	ext := filepath.Ext(fh.Filename)
 	filename := fmt.Sprintf("%s%s", time.Now().UTC().String(), ext)
 	outFile, err := os.Create(filename)
@@ -58,10 +69,8 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer outFile.Close()
-
 	outFile.WriteString(result)
 
-	// Возвращаем результат
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Write([]byte(result))
 }

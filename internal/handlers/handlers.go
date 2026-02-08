@@ -2,22 +2,13 @@ package handlers
 
 import (
 	"fmt"
-	"html/template"
+	"io"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/Yandex-Practicum/go1fl-sprint6-final/internal/service"
 )
-
-func IndexHandler(w http.ResponseWriter, r *http.Request) {
-	tmpl, err := template.ParseFiles("index.html")
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-	tmpl.Execute(w, nil)
-}
 
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -38,7 +29,8 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	data, err := os.ReadFile(file.(*os.File).Name())
+	// Читаем содержимое файла напрямую
+	data, err := io.ReadAll(file)
 	if err != nil {
 		http.Error(w, "Error reading file", http.StatusInternalServerError)
 		return

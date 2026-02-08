@@ -1,7 +1,8 @@
 package handlers
 
 import (
-	"fmt"
+	"encoding/json"
+	"html/template"
 	"io"
 	"net/http"
 	"os"
@@ -10,48 +11,71 @@ import (
 	"github.com/Yandex-Practicum/go1fl-sprint6-final/internal/service"
 )
 
+func IndexHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.ParseFiles("index.html")
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	tmpl.Execute(w, nil)
+}
+
+type Response struct {
+	Message  string `json:"message"`
+	Filename string `json:"filename,omitempty"`
+	Result   string `json:"result,omitempty"`
+}
+
 func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		json.NewEncoder(w).Encode(Response{Message: "Method Not Allowed"})
 		return
 	}
 
 	err := r.ParseMultipartForm(10 << 20) // 10MB
 	if err != nil {
-		http.Error(w, "Error parsing form", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(Response{Message: "Error parsing form"})
 		return
 	}
 
 	file, _, err := r.FormFile("file")
 	if err != nil {
-		http.Error(w, "Error retrieving file", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(Response{Message: "Error retrieving file"})
 		return
 	}
 	defer file.Close()
 
-	// Читаем содержимое файла напрямую
 	data, err := io.ReadAll(file)
 	if err != nil {
-		http.Error(w, "Error reading file", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(Response{Message: "Error reading file"})
 		return
 	}
 
 	content := string(data)
 
-	// Определение и конвертация
 	result, err := service.DetectAndConvert(content)
 	if err != nil {
-		http.Error(w, "Error processing content", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(Response{Message: "Error processing content"})
 		return
 	}
 
-	// Создание уникального имени файла
 	filename := "result_" + time.Now().UTC().Format("20060102_150405") + ".txt"
 	err = os.WriteFile(filename, []byte(result), 0644)
 	if err != nil {
-		http.Error(w, "Error saving result", http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(Response{Message: "Error saving result"})
 		return
 	}
 
-	fmt.Fprintf(w, "Результат:\n%s\n\nФайл сохранен как %s", result, filename)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(Response{
+		Message:  "File processed successfully",
+		Filename: filename,
+		Result:   result,
+	})
 }

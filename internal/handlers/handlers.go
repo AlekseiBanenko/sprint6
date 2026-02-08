@@ -11,6 +11,10 @@ import (
 	"github.com/Yandex-Practicum/go1fl-sprint6-final/internal/service"
 )
 
+func IndexHandler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "index.html")
+}
+
 type Response struct {
 	Message  string `json:"message"`
 	Filename string `json:"filename,omitempty"`

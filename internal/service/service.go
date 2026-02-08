@@ -25,11 +25,14 @@ func DetectAndConvert(input string) (string, error) {
 
 // Вспомогательная функция для определения типа строки
 func isMorseCode(s string) bool {
-	// Морзе состоит из точек, тире, пробелов
+	hasMorseChars := false
 	for _, r := range s {
 		if r != '.' && r != '-' && r != ' ' && r != '/' {
 			return false
 		}
+		if r == '.' || r == '-' {
+			hasMorseChars = true
+		}
 	}
-	return true
+	return hasMorseChars
 }

@@ -2,145 +2,34 @@ package service
 
 import (
 	"errors"
-	"fmt"
 	"strings"
+
+	"github.com/AlekseiBanenko/sprint6/pkg/morse"
 )
 
-var morseToText = map[string]string{
-	// Русские буквы
-	".-":     "А",
-	"-...":   "Б",
-	".--":    "В",
-	"--.":    "Г",
-	"-..":    "Д",
-	".":      "Е",
-	"...-":   "Ж",
-	"--..":   "З",
-	"..":     "И",
-	".---":   "Й",
-	"-.-":    "К",
-	".-..":   "Л",
-	"--":     "М",
-	"-.":     "Н",
-	"---":    "О",
-	".--.":   "П",
-	".-.":    "Р",
-	"...":    "С",
-	"-":      "Т",
-	"..-":    "У",
-	"..-.":   "Ф",
-	"....":   "Х",
-	"-..-":   "Х",
-	"-.--":   "Ъ",
-	"--.--":  "Э",
-	".-.-":   "ПРОБЕЛ",
-	".-.-.":  "Ё",
-	"-....-": "-",
-	"..-..":  "Ь",
-	".--.-":  "Э",
-	"--.-":   "Щ",
-
-	"/": " ",
-}
-
-var textToMorse = map[rune]string{
-	'А': ".-", 'а': ".-",
-	'Б': "-...", 'б': "-...",
-	'В': ".--", 'в': ".--",
-	'Г': "--.", 'г': "--.",
-	'Д': "-..", 'д': "-..",
-	'Е': ".", 'е': ".",
-	'Ё': "--.", 'ё': "--.",
-	'Ж': "...-", 'ж': "...-",
-	'З': "--..", 'з': "--..",
-	'И': "..", 'и': "..",
-	'Й': ".---", 'й': ".---",
-	'К': "-.-", 'к': "-.-",
-	'Л': ".-..", 'л': ".-..",
-	'М': "--", 'м': "--",
-	'Н': "-.", 'н': "-.",
-	'О': "---", 'о': "---",
-	'П': ".--.", 'п': ".--.",
-	'Р': ".-.", 'р': ".-.",
-	'С': "...", 'с': "...",
-	'Т': "-", 'т': "-",
-	'У': "..-", 'у': "..-",
-	'Ф': "..-.", 'ф': "..-.",
-	'Х': "....", 'х': "....",
-	'Ц': "-.-.", 'ц': "-.-.",
-	'Ч': "---.", 'ч': "---.",
-	'Ш': "----", 'ш': "----",
-	'Щ': "--.-", 'щ': "--.-",
-	'Ъ': "-.--.-", 'ъ': "-.--.-",
-	'Ы': "-.-..", 'ы': "-.-..",
-	'Ь': "..-..", 'ь': "..-..",
-	'Э': ".--.-", 'э': ".--.-",
-	'Ю': "---.", 'ю': "---.",
-	'Я': ".-.-", 'я': ".-.-",
-	' ': "/", // пробел
-}
-
-func AutoConvert(input string) (string, error) {
+func DetectAndConvert(input string) (string, error) {
 	trimmed := strings.TrimSpace(input)
 	if trimmed == "" {
-		return "", errors.New("input is empty")
+		return "", errors.New("пустая строка")
 	}
 
-	// Проверка, содержит ли вход только допустимые символы для Морзе
-	morseChars := ".- /"
-	isMorse := true
-	for _, r := range trimmed {
-		if !strings.ContainsRune(morseChars, r) {
-			isMorse = false
-			break
-		}
+	// Проверка, является ли строка морзе-кодом
+	if isMorseCode(trimmed) {
+		// Конвертируем из морзе в текст
+		return morse.ToText(trimmed), nil
+	} else {
+		// Конвертируем из текста в морзе
+		return morse.ToMorse(trimmed), nil
 	}
-
-	if isMorse {
-		return decodeMorse(trimmed)
-	}
-	return encodeMorse(trimmed), nil
 }
 
-func decodeMorse(code string) (string, error) {
-	fmt.Println("Decoding Morse:", code)
-	parts := strings.Split(code, " ")
-	var decoded strings.Builder
-
-	for _, c := range parts {
-		if c == "" {
-			continue
-		}
-		if c == "/" {
-			// разделитель слов
-			decoded.WriteString(" ")
-			continue
-		}
-		if letter, ok := morseToText[c]; ok {
-			decoded.WriteString(letter)
-		} else {
-			fmt.Printf("Код не найден: %s\n", c)
-			return "", fmt.Errorf("invalid morse code: %s", c)
+// Вспомогательная функция для определения типа строки
+func isMorseCode(s string) bool {
+	// Морзе состоит из точек, тире, пробелов
+	for _, r := range s {
+		if r != '.' && r != '-' && r != ' ' && r != '/' {
+			return false
 		}
 	}
-	return decoded.String(), nil
-}
-
-func encodeMorse(input string) string {
-	var result strings.Builder
-
-	for _, r := range input {
-		if r == ' ' {
-			// разделитель слов
-			result.WriteString(" / ")
-			continue
-		}
-		if morse, ok := textToMorse[r]; ok {
-			if result.Len() > 0 && result.String()[result.Len()-1] != ' ' {
-				result.WriteByte(' ')
-			}
-			result.WriteString(morse)
-		}
-	}
-	return result.String()
+	return true
 }

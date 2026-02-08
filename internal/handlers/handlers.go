@@ -2,82 +2,64 @@ package handlers
 
 import (
 	"fmt"
-	"io"
+	"html/template"
 	"net/http"
 	"os"
-	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/Yandex-Practicum/go1fl-sprint6-final/internal/service"
 )
 
-func Index(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	http.ServeFile(w, r, "index.html")
+func IndexHandler(w http.ResponseWriter, r *http.Request) {
+	tmpl, err := template.ParseFiles("index.html")
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	tmpl.Execute(w, nil)
 }
 
-func Upload(w http.ResponseWriter, r *http.Request) {
+func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Only POST allowed", http.StatusMethodNotAllowed)
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Проверка типа контента
-	contentType := r.Header.Get("Content-Type")
-	if !strings.HasPrefix(contentType, "multipart/form-data") {
-		http.Error(w, "multipart/form-data required", http.StatusBadRequest)
-		return
-	}
-
-	// Парсинг формы
-	if err := r.ParseMultipartForm(10 << 20); err != nil {
-		http.Error(w, fmt.Sprintf("parse error: %v", err), http.StatusInternalServerError)
-		return
-	}
-
-	// Получение файла из формы
-	f, fh, err := r.FormFile("myFile")
+	err := r.ParseMultipartForm(10 << 20) // 10MB
 	if err != nil {
-		// Для отладки можно вывести все поля формы
-		for name := range r.MultipartForm.File {
-			fmt.Printf("Found file field: %s\n", name)
-		}
-		http.Error(w, fmt.Sprintf("file 'myFile' not found: %v", err), http.StatusBadRequest)
+		http.Error(w, "Error parsing form", http.StatusInternalServerError)
 		return
 	}
-	defer f.Close()
 
-	data, err := io.ReadAll(f)
+	file, _, err := r.FormFile("file")
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Error retrieving file", http.StatusInternalServerError)
 		return
 	}
+	defer file.Close()
 
-	result, err := service.AutoConvert(string(data))
+	data, err := os.ReadFile(file.(*os.File).Name())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Error reading file", http.StatusInternalServerError)
 		return
 	}
 
-	// Генерация безопасного имени файла
-	ext := filepath.Ext(fh.Filename)
-	filename := fmt.Sprintf("%d%s", time.Now().UnixNano(), ext)
+	content := string(data)
 
-	outFile, err := os.Create(filename)
+	// Определение и конвертация
+	result, err := service.DetectAndConvert(content)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer outFile.Close()
-
-	// Запись результата в файл
-	if _, err := outFile.WriteString(result); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "Error processing content", http.StatusInternalServerError)
 		return
 	}
 
-	// Отправка результата клиенту
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.Write([]byte(result))
+	// Создание уникального имени файла
+	filename := "result_" + time.Now().UTC().Format("20060102_150405") + ".txt"
+	err = os.WriteFile(filename, []byte(result), 0644)
+	if err != nil {
+		http.Error(w, "Error saving result", http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Fprintf(w, "Результат:\n%s\n\nФайл сохранен как %s", result, filename)
 }

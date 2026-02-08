@@ -1,3 +1,4 @@
+// package server
 package server
 
 import (
@@ -9,30 +10,32 @@ import (
 )
 
 type Server struct {
-	logger *log.Logger
-	server *http.Server
+	httpServer *http.Server
+	Logger     *log.Logger
 }
 
-func New(l *log.Logger) *Server {
+func NewServer(logger *log.Logger) *Server {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", handlers.Index)
-	mux.HandleFunc("/upload", handlers.Upload)
+
+	mux.HandleFunc("/", handlers.IndexHandler)
+	mux.HandleFunc("/upload", handlers.UploadHandler)
 
 	srv := &http.Server{
 		Addr:         ":8080",
 		Handler:      mux,
-		ErrorLog:     l,
+		ErrorLog:     logger,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 		IdleTimeout:  15 * time.Second,
 	}
 
 	return &Server{
-		logger: l,
-		server: srv,
+		httpServer: srv,
+		Logger:     logger,
 	}
 }
 
 func (s *Server) Start() error {
-	return s.server.ListenAndServe()
+	s.Logger.Println("Starting server on", s.httpServer.Addr)
+	return s.httpServer.ListenAndServe()
 }

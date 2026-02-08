@@ -8,7 +8,10 @@ import (
 )
 
 func main() {
-	logger := log.New(os.Stdout, "INFO: ", log.Ldate|log.Ltime)
-	srv := server.New(logger)
-	logger.Fatal("Server failed: ", srv.Start())
+	logger := log.New(os.Stdout, "app: ", log.LstdFlags)
+	srv := server.NewServer(logger)
+
+	if err := srv.Start(); err != nil {
+		logger.Fatal(err)
+	}
 }

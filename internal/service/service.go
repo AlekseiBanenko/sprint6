@@ -4,7 +4,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/AlekseiBanenko/sprint6/pkg/morse"
+	"github.com/Yandex-Practicum/go1fl-sprint6-final/pkg/morse"
 )
 
 func DetectAndConvert(input string) (string, error) {

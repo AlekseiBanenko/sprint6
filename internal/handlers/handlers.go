@@ -73,6 +73,16 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Проверка и парсинг JSON-ответа, если есть
+	if len(result) > 0 && result[0] == '{' {
+		var resp map[string]string
+		if err := json.Unmarshal([]byte(result), &resp); err == nil {
+			if val, ok := resp["result"]; ok {
+				result = val
+			}
+		}
+	}
+
 	// Создание уникального имени файла
 	filename := "result_" + time.Now().UTC().Format("20060102_150405") + ".txt"
 	err = os.WriteFile(filename, []byte(result), 0644)

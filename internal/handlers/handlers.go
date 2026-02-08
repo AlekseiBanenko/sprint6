@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/Yandex-Practicum/go1fl-sprint6-final/internal/service"
@@ -30,7 +31,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Проверка Content-Type
 	contentType := r.Header.Get("Content-Type")
-	if contentType == "" || !containsMultipart(contentType) {
+	if contentType == "" || !strings.HasPrefix(contentType, "multipart/") {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(Response{Message: "Content-Type must be multipart/form-data"})
 		return
@@ -73,7 +74,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Проверка и парсинг JSON-ответа, если есть
+	// Если результат — JSON-объект, извлечь поле "result"
 	if len(result) > 0 && result[0] == '{' {
 		var resp map[string]string
 		if err := json.Unmarshal([]byte(result), &resp); err == nil {
@@ -83,7 +84,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Создание уникального имени файла
+	// Создание имени файла
 	filename := "result_" + time.Now().UTC().Format("20060102_150405") + ".txt"
 	err = os.WriteFile(filename, []byte(result), 0644)
 	if err != nil {
@@ -93,7 +94,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Отправка успешного ответа
+	// Отправка ответа
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(Response{
 		Message:  "File processed successfully",

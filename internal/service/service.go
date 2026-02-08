@@ -10,24 +10,31 @@ import (
 
 // DetectAndConvert определяет, является ли входной текст морзе-кодом,
 // и конвертирует его либо в текст, либо в морзе.
-func DetectAndConvert(input string) (string, error) {
-	trimmed := strings.TrimSpace(input)
+unc DetectAndConvert(input string) (string, error) {
+    trimmed := strings.TrimSpace(input)
 
-	log.Printf("DetectAndConvert: входные данные='%s'", trimmed)
+    log.Printf("DetectAndConvert: входные данные='%s'", trimmed)
 
-	if trimmed == "" {
-		return "", errors.New("пустая строка")
-	}
+    if trimmed == "" {
+        return "", errors.New("пустая строка")
+    }
 
-	// Проверка, является ли строка морзе-кодом
-	if isMorseCode(trimmed) {
-		log.Println("Обнаружен морзе-код, конвертация в текст.")
-		return morse.ToText(trimmed), nil
-	} else {
-		log.Println("Обнаружен обычный текст, конвертация в морзе.")
-		return morse.ToMorse(trimmed), nil
-	}
+    // Проверка, является ли строка JSON
+    if strings.HasPrefix(trimmed, "{") || strings.HasPrefix(trimmed, "[") {
+        log.Println("Обнаружен JSON, возвращаем как есть.")
+        return trimmed, nil
+    }
+
+    // Проверка, является ли строка морзе-кодом
+    if isMorseCode(trimmed) {
+        log.Println("Обнаружен морзе-код, конвертация в текст.")
+        return morse.ToText(trimmed), nil
+    } else {
+        log.Println("Обнаружен обычный текст, конвертация в морзе.")
+        return morse.ToMorse(trimmed), nil
+    }
 }
+
 
 // Вспомогательная функция для определения, является ли строка морзе-кодом
 func isMorseCode(s string) bool {

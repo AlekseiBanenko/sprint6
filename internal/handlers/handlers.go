@@ -29,7 +29,6 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Проверка Content-Type
 	contentType := r.Header.Get("Content-Type")
 	if contentType == "" || !strings.HasPrefix(contentType, "multipart/") {
 		w.WriteHeader(http.StatusBadRequest)
@@ -37,7 +36,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := r.ParseMultipartForm(10 << 20) // 10MB
+	err := r.ParseMultipartForm(10 << 20)
 	if err != nil {
 		log.Println("Error parsing multipart form:", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -54,7 +53,6 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	// Чтение содержимого файла
 	data, err := io.ReadAll(file)
 	if err != nil {
 		log.Println("Error reading file:", err)
@@ -65,7 +63,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 
 	content := string(data)
 
-	// Обработка содержимого через сервис
+	// Вызов сервиса обработки
 	result, err := service.DetectAndConvert(content)
 	if err != nil {
 		log.Println("Error processing content:", err)
@@ -84,7 +82,7 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Создание имени файла
+	// Создаем имя файла
 	filename := "result_" + time.Now().UTC().Format("20060102_150405") + ".txt"
 	err = os.WriteFile(filename, []byte(result), 0644)
 	if err != nil {
@@ -94,13 +92,9 @@ func UploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Отправка ответа
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(Response{
-		Message:  "File processed successfully",
-		Filename: filename,
-		Result:   result,
-	})
+	// В ответе возвращаем именно исходный текст, а не JSON
+	w.Header().Set("Content-Type", "text/plain")
+	w.Write([]byte(result))
 }
 
 // Вспомогательная функция для проверки Content-Type
